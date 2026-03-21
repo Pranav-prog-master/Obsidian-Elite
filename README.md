@@ -142,7 +142,7 @@ edumentor-ai/
 #### 1️⃣ Clone & Configure
 
 ```bash
-git clone https://github.com/your-repo/edumentor-ai.git
+git clone https://github.com/Pranav-prog-master/Obsidian-Elite
 cd edumentor-ai
 
 # Copy environment file
