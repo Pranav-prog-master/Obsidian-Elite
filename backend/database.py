@@ -7,7 +7,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:password@localhost:5432/edumentor")
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise RuntimeError(
+        "DATABASE_URL is not set. Configure your Supabase Postgres connection string in .env"
+    )
+
+db_ssl_mode = os.getenv("DB_SSL", "require").lower()
+connect_args = {}
+if db_ssl_mode in {"require", "true", "1"}:
+    connect_args["ssl"] = "require"
 
 engine = create_async_engine(
     DATABASE_URL,
@@ -15,6 +25,7 @@ engine = create_async_engine(
     future=True,
     pool_pre_ping=True,
     pool_recycle=3600,
+    connect_args=connect_args,
 )
 
 AsyncSessionLocal = async_sessionmaker(
