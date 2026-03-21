@@ -1,5 +1,30 @@
 # Obsidian Elite (EduMentor AI)
 
+<<<<<<< HEAD
+Obsidian Elite is an AI-powered study companion for exam preparation. It helps students upload notes, generate quizzes, identify weak topics, and build personalized study plans.
+
+## Highlights
+
+- AI quiz generation from uploaded PDF notes
+- Concept explanation and instant doubt solving
+- Weak-topic detection from quiz performance
+- Adaptive study plan generation
+- Performance trends and analytics dashboard
+
+## Tech Stack
+
+| Layer       | Technology                                          |
+| ----------- | --------------------------------------------------- |
+| Backend     | Python 3.11, FastAPI, SQLAlchemy, Supabase Postgres |
+| Frontend    | React 18, Vite, TailwindCSS, Chart.js               |
+| AI          | Anthropic Claude API                                |
+| Auth        | JWT (`python-jose`)                                 |
+| PDF Parsing | PyMuPDF (`fitz`)                                    |
+| DevOps      | Docker, Docker Compose                              |
+
+## Project Structure
+
+=======
 AI-powered study companion for exam preparation with personalized quizzes, adaptive study plans, doubt solving, concept explanation, and performance analytics.
 
 ## Overview
@@ -27,6 +52,7 @@ Obsidian Elite helps students prepare smarter by generating learning activities 
 
 ## Repository Structure
 
+>>>>>>> origin/main
 ```text
 Obsidian-Elite/
 ├── backend/
@@ -46,10 +72,21 @@ Obsidian-Elite/
 │   ├── package.json
 │   └── Dockerfile
 ├── docker-compose.yml
+<<<<<<< HEAD
+├── .env.example
+=======
+>>>>>>> origin/main
 ├── TEAM_GUIDE.md
 └── README.md
 ```
 
+<<<<<<< HEAD
+## Supabase Setup
+
+1. Create a Supabase project.
+2. Open **Project Settings → Database**.
+3. Copy the connection string and convert it to SQLAlchemy async format:
+=======
 ## Key Modules
 
 ### Backend
@@ -66,9 +103,43 @@ Obsidian-Elite/
 - `components/WeakTopicsBadge.jsx`: weak-topic severity badges
 
 ## Getting Started
+>>>>>>> origin/main
 
-### Prerequisites
+```text
+postgresql+asyncpg://postgres.<project-ref>:<db-password>@aws-0-<region>.pooler.supabase.com:6543/postgres
+```
 
+<<<<<<< HEAD
+4. Create a local environment file from the template:
+
+```bash
+cp .env.example .env
+```
+
+5. Set at minimum the following values in `.env`:
+
+```env
+DATABASE_URL=postgresql+asyncpg://postgres.<project-ref>:<db-password>@aws-0-<region>.pooler.supabase.com:6543/postgres
+DB_SSL=require
+SECRET_KEY=your_jwt_secret_key_here
+ANTHROPIC_API_KEY=sk-ant-your_key_here
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=1440
+```
+
+## Run with Docker
+
+```bash
+docker-compose up -d --build
+```
+
+Services:
+
+- Frontend: http://localhost:5173
+- Backend API docs: http://localhost:8000/docs
+
+Useful commands:
+=======
 - Docker and Docker Compose (recommended)
 - OR Python 3.11+, Node.js 18+, PostgreSQL 15, Redis 7
 
@@ -91,16 +162,24 @@ docker-compose up -d
 - Backend API Docs: http://localhost:8000/docs
 
 ### Useful Docker Commands
+>>>>>>> origin/main
 
 ```bash
 docker-compose ps
 docker-compose logs backend
 docker-compose logs frontend
+<<<<<<< HEAD
+docker-compose down
+```
+
+## Run Without Docker
+=======
 docker-compose build --no-cache
 docker-compose down -v
 ```
 
 ## Manual Setup (Without Docker)
+>>>>>>> origin/main
 
 ### Backend
 
@@ -125,6 +204,36 @@ npm install
 npm run dev
 ```
 
+<<<<<<< HEAD
+## API Endpoints
+
+### Study Plan
+
+| Method | Endpoint               | Description                      |
+| ------ | ---------------------- | -------------------------------- |
+| POST   | `/studyplan/generate`  | Generate personalized study plan |
+| GET    | `/studyplan/{plan_id}` | Get one study plan               |
+| GET    | `/studyplan/list/all`  | List all user study plans        |
+
+### Performance
+
+| Method | Endpoint                            | Description                      |
+| ------ | ----------------------------------- | -------------------------------- |
+| GET    | `/performance/summary/{subject_id}` | Subject performance summary      |
+| GET    | `/performance/all`                  | All-subject performance overview |
+| GET    | `/performance/trends/{subject_id}`  | Trend data for charts            |
+
+## Troubleshooting
+
+- If backend fails on startup, verify `DATABASE_URL` and `DB_SSL` in `.env`.
+- If API is unreachable, check backend logs:
+
+```bash
+docker-compose logs backend
+```
+
+- Health check:
+=======
 ## Main API Endpoints
 
 ### Study Plan
@@ -159,11 +268,26 @@ docker-compose ps
 ```
 
 ### Backend health check
+>>>>>>> origin/main
 
 ```bash
 curl http://localhost:8000/health
 ```
 
+<<<<<<< HEAD
+## Team
+
+| Area                              | Owner   |
+| --------------------------------- | ------- |
+| Frontend                          | Nikhil  |
+| Backend Core & Database           | Pranav  |
+| AI Engine                         | Kirtan  |
+| Analytics, Study Planning, DevOps | Prahlad |
+
+## License
+
+MIT
+=======
 ### Reset local database volumes
 
 ```bash
@@ -193,3 +317,4 @@ MIT License
 ---
 
 Last updated: March 2026
+>>>>>>> origin/main
