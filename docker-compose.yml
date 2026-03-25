@@ -7,20 +7,26 @@ services:
       dockerfile: Dockerfile
     container_name: edumentor_backend
     environment:
-      DATABASE_URL: ${DATABASE_URL}
-      DB_SSL: ${DB_SSL:-require}
-      SECRET_KEY: ${SECRET_KEY:-your_jwt_secret_key_here_change_in_production}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-      ALGORITHM: HS256
-      ACCESS_TOKEN_EXPIRE_MINUTES: 1440
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - AI_MODEL_PRIMARY=google/gemma-2-9b-it:free
+      - AI_MODEL_BACKUP=mistralai/mistral-7b-instruct:free
+      - AI_PROVIDER=openrouter
+      - APP_SITE_URL=http://localhost:5173
+      - APP_TITLE=EduMentor AI
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - SECRET_KEY=${SECRET_KEY}
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=1440
+      - ENVIRONMENT=development
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app
-      - backend_uploads:/app/uploads
-    networks:
-      - edumentor
+      - ./backend/uploads:/app/uploads
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
 
   frontend:
     build:
@@ -28,21 +34,13 @@ services:
       dockerfile: Dockerfile
     container_name: edumentor_frontend
     environment:
-      VITE_API_URL: http://backend:8000
+      - VITE_API_URL=http://localhost:8000
     ports:
       - "5173:5173"
-    depends_on:
-      - backend
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    networks:
-      - edumentor
-    command: npm run dev -- --host
-
-volumes:
-  backend_uploads:
-
-networks:
-  edumentor:
-    driver: bridge
+    command: npm run dev -- --host 0.0.0.0
+    depends_on:
+      - backend
+    restart: unless-stopped
