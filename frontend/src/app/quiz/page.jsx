@@ -76,23 +76,23 @@ function QuizPageContent() {
 
   if (phase === 'select') return (
     <div className="shell">
-      <div style={{ width: '100%', maxWidth: 600 }}>
+      <div style={{ width: '100%' }}>
         <Navbar />
-        <div className="card anim-2" style={{ padding: 40, textAlign: 'center' }}>
-          <div style={{ fontSize: 52, marginBottom: 16 }}>📝</div>
-          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, fontWeight: 700, color: 'var(--dark)', marginBottom: 8 }}>Generate Quiz</h2>
-          <p style={{ color: 'var(--mid)', fontSize: 15, marginBottom: 28 }}>AI will create 10 questions from your uploaded notes</p>
-          <select className="inp" value={selectedSubject} onChange={e => setSelectedSubject(e.target.value)} style={{ marginBottom: 20, textAlign: 'left' }}>
+        <div className="card anim-2" style={{ padding: 28, textAlign: 'center', maxWidth: 600, margin: '0 auto' }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>📝</div>
+          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 700, color: 'var(--dark)', marginBottom: 6 }}>Generate Quiz</h2>
+          <p style={{ color: 'var(--mid)', fontSize: 13, marginBottom: 20 }}>AI will create 10 questions from your uploaded notes</p>
+          <select className="inp" value={selectedSubject} onChange={e => setSelectedSubject(e.target.value)} style={{ marginBottom: 16, textAlign: 'left' }}>
             {subjects.map(s => <option key={s.id} value={s.id}>{s.name} ({s.exam_target})</option>)}
           </select>
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 28 }}>
-            {[['⏱', '60s per question'], ['🤖', 'AI generated'], ['📊', '10 questions']].map(([icon, label]) => (
-              <div key={label} style={{ background: 'rgba(42,157,143,0.08)', borderRadius: 12, padding: '10px 16px', fontSize: 13, color: 'var(--mid)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10, marginBottom: 20 }}>
+            {[['⏱', '60s/q'], ['🤖', 'AI'], ['📊', '10 Qs']].map(([icon, label]) => (
+              <div key={label} style={{ background: 'rgba(42,157,143,0.08)', borderRadius: 10, padding: '8px 12px', fontSize: 12, color: 'var(--mid)' }}>
                 {icon} {label}
               </div>
             ))}
           </div>
-          <button className="btn btn-teal" onClick={startQuiz} disabled={loading || !selectedSubject} style={{ width: '100%', justifyContent: 'center', fontSize: 15 }}>
+          <button className="btn btn-teal" onClick={startQuiz} disabled={loading || !selectedSubject} style={{ width: '100%', justifyContent: 'center', fontSize: 14 }}>
             {loading ? 'Generating quiz...' : 'Start Quiz →'}
           </button>
         </div>
@@ -102,40 +102,41 @@ function QuizPageContent() {
 
   if (phase === 'quiz' && q) return (
     <div className="shell">
-      <div style={{ width: '100%', maxWidth: 700 }}>
+      <div style={{ width: '100%' }}>
         <Navbar />
         {/* Progress */}
-        <div className="anim-1" style={{ marginBottom: 20 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'rgba(255,255,255,0.8)', marginBottom: 8 }}>
+        <div className="anim-1" style={{ marginBottom: 16, maxWidth: 700, margin: '0 auto 16px auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'rgba(255,255,255,0.8)', marginBottom: 6 }}>
             <span>Question {current + 1} of {questions.length}</span>
             <span>{pct}% complete</span>
           </div>
           <div className="progress-track"><div className="progress-fill" style={{ width: `${pct}%` }} /></div>
         </div>
 
-        <div className="card anim-2" style={{ padding: 32 }}>
+        <div className="card anim-2" style={{ padding: 20, maxWidth: 700, margin: '0 auto' }}>
           {/* Timer + Q number */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-            <span className="tag tag-teal">Q{current + 1}</span>
-            <div className={`timer-ring ${timer <= 10 ? 'urgent' : ''}`}>{timer}</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+            <span className="tag tag-teal" style={{ fontSize: 10 }}>Q{current + 1}</span>
+            <div className={`timer-ring ${timer <= 10 ? 'urgent' : ''}`} style={{ width: 56, height: 56, fontSize: 16 }}>{timer}</div>
           </div>
 
-          <h3 style={{ fontSize: 18, fontWeight: 500, color: 'var(--dark)', lineHeight: 1.5, marginBottom: 24 }}>{q.question}</h3>
+          <h3 style={{ fontSize: 16, fontWeight: 500, color: 'var(--dark)', lineHeight: 1.5, marginBottom: 18 }}>{q.question}</h3>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {['a', 'b', 'c', 'd'].map(opt => (
               <button key={opt} className={`quiz-option ${answers[q.id] === opt ? 'selected' : ''}`}
-                onClick={() => selectAnswer(q.id, opt)}>
-                <span style={{ fontWeight: 600, color: 'var(--teal)', marginRight: 10 }}>{opt.toUpperCase()}.</span>
+                onClick={() => selectAnswer(q.id, opt)}
+                style={{ padding: '12px 16px', fontSize: 13 }}>
+                <span style={{ fontWeight: 600, color: 'var(--teal)', marginRight: 8 }}>{opt.toUpperCase()}.</span>
                 {q[`option_${opt}`]}
               </button>
             ))}
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 24, gap: 12 }}>
-            {current > 0 && <button className="btn btn-ghost" onClick={() => { setCurrent(p => p - 1); setTimer(60); }}>← Back</button>}
-            <button className="btn btn-teal" onClick={handleNext} disabled={loading}>
-              {current === questions.length - 1 ? (loading ? 'Submitting...' : 'Submit Quiz') : 'Next →'}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 18, gap: 10, flexWrap: 'wrap' }}>
+            {current > 0 && <button className="btn btn-ghost btn-sm" onClick={() => { setCurrent(p => p - 1); setTimer(60); }} style={{ fontSize: 12 }}>← Back</button>}
+            <button className="btn btn-teal btn-sm" onClick={handleNext} disabled={loading} style={{ fontSize: 12 }}>
+              {current === questions.length - 1 ? (loading ? 'Submitting...' : 'Submit') : 'Next →'}
             </button>
           </div>
         </div>
@@ -145,38 +146,38 @@ function QuizPageContent() {
 
   if (phase === 'result' && result) return (
     <div className="shell">
-      <div style={{ width: '100%', maxWidth: 760 }}>
+      <div style={{ width: '100%', maxWidth: 760, margin: '0 auto' }}>
         <Navbar />
 
-        <div className="card anim-1" style={{ padding: 36, marginBottom: 24, textAlign: 'center' }}>
-          <div style={{ fontSize: 52, marginBottom: 12 }}>{result.percentage >= 70 ? '🎉' : result.percentage >= 40 ? '👍' : '💪'}</div>
-          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 700, color: 'var(--dark)', marginBottom: 6 }}>Quiz Complete!</h2>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 48, fontWeight: 700, color: 'var(--teal)', margin: '12px 0' }}>{result.percentage}%</div>
-          <p style={{ color: 'var(--mid)', fontSize: 15 }}>{result.score} out of {result.total} correct</p>
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 20 }}>
-            <button className="btn btn-teal" onClick={() => { setPhase('select'); setQuestions([]); setResult(null); }}>Take Another Quiz</button>
-            <button className="btn btn-ghost" onClick={() => router.push('/performance')}>View Progress</button>
+        <div className="card anim-1" style={{ padding: 28, marginBottom: 20, textAlign: 'center' }}>
+          <div style={{ fontSize: 40, marginBottom: 10 }}>{result.percentage >= 70 ? '🎉' : result.percentage >= 40 ? '👍' : '💪'}</div>
+          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 700, color: 'var(--dark)', marginBottom: 4 }}>Quiz Complete!</h2>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 700, color: 'var(--teal)', margin: '10px 0' }}>{result.percentage}%</div>
+          <p style={{ color: 'var(--mid)', fontSize: 13 }}>{result.score} out of {result.total} correct</p>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 16, flexWrap: 'wrap' }}>
+            <button className="btn btn-teal btn-sm" onClick={() => { setPhase('select'); setQuestions([]); setResult(null); }} style={{ fontSize: 12 }}>Another Quiz</button>
+            <button className="btn btn-ghost btn-sm" onClick={() => router.push('/performance')} style={{ fontSize: 12 }}>View Progress</button>
           </div>
         </div>
 
-        <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 600, color: 'white', marginBottom: 16 }}>Question Review</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, fontWeight: 600, color: 'white', marginBottom: 12 }}>Question Review</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {result.questions?.map((q, i) => (
-            <div key={q.id} className="card anim-2" style={{ padding: 24 }}>
-              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 12 }}>
-                <span style={{ fontSize: 18 }}>{q.is_correct ? '✅' : '❌'}</span>
-                <p style={{ fontSize: 15, color: 'var(--dark)', lineHeight: 1.5 }}>{i + 1}. {q.question_text}</p>
+            <div key={q.id} className="card anim-2" style={{ padding: 18 }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 10 }}>
+                <span style={{ fontSize: 16, flexShrink: 0 }}>{q.is_correct ? '✅' : '❌'}</span>
+                <p style={{ fontSize: 14, color: 'var(--dark)', lineHeight: 1.5 }}>{i + 1}. {q.question_text}</p>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 6, marginBottom: 10 }}>
                 {['a', 'b', 'c', 'd'].map(opt => {
                   let cls = 'quiz-option';
                   if (opt === q.correct_option) cls += ' correct';
                   else if (opt === q.user_answer && !q.is_correct) cls += ' wrong';
-                  return <div key={opt} className={cls} style={{ cursor: 'default', fontSize: 13 }}><b>{opt.toUpperCase()}.</b> {q[`option_${opt}`]}</div>;
+                  return <div key={opt} className={cls} style={{ cursor: 'default', fontSize: 12, padding: '10px 14px' }}><b>{opt.toUpperCase()}.</b> {q[`option_${opt}`]}</div>;
                 })}
               </div>
               {!q.is_correct && q.explanation && (
-                <div style={{ background: 'rgba(42,157,143,0.06)', borderRadius: 12, padding: '12px 16px', fontSize: 13, color: 'var(--mid)', borderLeft: '3px solid var(--teal)' }}>
+                <div style={{ background: 'rgba(42,157,143,0.06)', borderRadius: 10, padding: '10px 12px', fontSize: 12, color: 'var(--mid)', borderLeft: '3px solid var(--teal)' }}>
                   💡 {q.explanation}
                 </div>
               )}

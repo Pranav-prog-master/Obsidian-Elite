@@ -54,7 +54,7 @@ function DoubtPageContent() {
           <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 15, marginTop: 4 }}>Ask any question — get instant answers with real-life examples</p>
         </div>
 
-        <div className="card anim-2" style={{ display: 'flex', flexDirection: 'column', height: 620 }}>
+        <div className="card anim-2" style={{ display: 'flex', flexDirection: 'column', minHeight: '58svh', height: 'clamp(460px, 68svh, 760px)' }}>
           {/* Subject selector */}
           <div style={{ padding: '16px 24px', borderBottom: '1px solid rgba(42,157,143,0.1)', display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--mid)', whiteSpace: 'nowrap' }}>Subject:</span>
