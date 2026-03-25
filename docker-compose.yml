@@ -1,65 +1,32 @@
 version: "3.9"
 
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: edumentor_postgres
-    environment:
-      POSTGRES_DB: edumentor
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - edumentor
-
-  redis:
-    image: redis:7-alpine
-    container_name: edumentor_redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - edumentor
-
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: edumentor_backend
     environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:password@postgres:5432/edumentor
-      REDIS_URL: redis://redis:6379
-      SECRET_KEY: ${SECRET_KEY:-your_jwt_secret_key_here_change_in_production}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-      ALGORITHM: HS256
-      ACCESS_TOKEN_EXPIRE_MINUTES: 1440
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - AI_MODEL_PRIMARY=google/gemma-2-9b-it:free
+      - AI_MODEL_BACKUP=mistralai/mistral-7b-instruct:free
+      - AI_PROVIDER=openrouter
+      - APP_SITE_URL=http://localhost:5173
+      - APP_TITLE=EduMentor AI
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - SECRET_KEY=${SECRET_KEY}
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=1440
+      - ENVIRONMENT=development
     ports:
       - "8000:8000"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     volumes:
       - ./backend:/app
-      - backend_uploads:/app/uploads
-    networks:
-      - edumentor
+      - ./backend/uploads:/app/uploads
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
 
   frontend:
     build:
@@ -67,23 +34,13 @@ services:
       dockerfile: Dockerfile
     container_name: edumentor_frontend
     environment:
-      VITE_API_URL: http://backend:8000
+      - VITE_API_URL=http://localhost:8000
     ports:
       - "5173:5173"
-    depends_on:
-      - backend
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    networks:
-      - edumentor
-    command: npm run dev -- --host
-
-volumes:
-  postgres_data:
-  redis_data:
-  backend_uploads:
-
-networks:
-  edumentor:
-    driver: bridge
+    command: npm run dev -- --host 0.0.0.0
+    depends_on:
+      - backend
+    restart: unless-stopped
