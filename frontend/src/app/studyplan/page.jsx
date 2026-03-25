@@ -49,7 +49,7 @@ export default function StudyPlanPage() {
 
         {/* Stats row */}
         {!loading && plan.length > 0 && (
-          <div className="anim-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+          <div className="anim-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
             {[
               { icon: '📅', label: 'Total Days', value: dates.length },
               { icon: '📌', label: 'Total Sessions', value: totalItems },
@@ -68,7 +68,7 @@ export default function StudyPlanPage() {
 
         {/* Filter buttons */}
         {plan.length > 0 && (
-          <div className="anim-2" style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
+          <div className="anim-2" style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
             {['all', 'read', 'practice', 'revise'].map(f => (
               <button key={f} onClick={() => setFilter(f)}
                 className={`btn btn-sm ${filter === f ? 'btn-teal' : 'btn-ghost'}`}

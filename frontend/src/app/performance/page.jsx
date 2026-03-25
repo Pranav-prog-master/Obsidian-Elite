@@ -61,9 +61,9 @@ export default function PerformancePage() {
         </div>
 
         {/* Subject selector */}
-        <div className="card anim-2" style={{ padding: '16px 24px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div className="card anim-2" style={{ padding: '16px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--mid)', whiteSpace: 'nowrap' }}>Viewing subject:</span>
-          <select className="inp" value={subjectId} onChange={e => setSubjectId(e.target.value)} style={{ maxWidth: 260 }}>
+          <select className="inp" value={subjectId} onChange={e => setSubjectId(e.target.value)} style={{ maxWidth: 320, minWidth: 220, flex: 1 }}>
             {subjects.map(s => <option key={s.id} value={s.id}>{s.name} ({s.exam_target})</option>)}
           </select>
         </div>
@@ -71,7 +71,7 @@ export default function PerformancePage() {
         {loading ? (
           <div style={{ textAlign: 'center', padding: 60, color: 'rgba(255,255,255,0.7)' }}>Loading performance data...</div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 }}>
 
             {/* Chart area */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
