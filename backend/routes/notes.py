@@ -1,191 +1,82 @@
-"""Notes Management Routes"""
-
-from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from fastapi import APIRouter, HTTPException, UploadFile, File, Depends
 from pydantic import BaseModel
-import fitz  # PyMuPDF
-from database import get_db
-from models.notes import Subject, Notes
-from routes.auth import verify_token
+import fitz
+from supabase_client import supabase
+from utils.auth_dependency import get_current_user
 
-router = APIRouter(prefix="/notes", tags=["notes"])
+router = APIRouter(prefix="/notes", tags=["Notes"])
 
 
 class SubjectCreate(BaseModel):
     name: str
-    exam_target: str = None
+    exam_target: str = "JEE"
 
 
-class SubjectResponse(BaseModel):
-    id: str
-    name: str
-    exam_target: str
+@router.post("/subjects", summary="Create a new subject")
+def create_subject(body: SubjectCreate, current_user: dict = Depends(get_current_user)):
+    res = supabase.table("subjects").insert({
+        "user_id": current_user["user_id"],
+        "name": body.name,
+        "exam_target": body.exam_target,
+    }).execute()
+    if not res.data:
+        raise HTTPException(status_code=500, detail="Failed to create subject.")
+    return res.data[0]
 
 
-class NotesResponse(BaseModel):
-    id: str
-    filename: str
-    chunk_count: int
-    created_at: str
+@router.get("/subjects", summary="List all subjects for current user")
+def list_subjects(current_user: dict = Depends(get_current_user)):
+    res = supabase.table("subjects").select("*").eq("user_id", current_user["user_id"]).execute()
+    return res.data or []
 
 
-async def get_current_user_id(token: str = Depends(verify_token)) -> str:
-    return token
-
-
-@router.post("/subjects", response_model=SubjectResponse)
-async def create_subject(
-    request: SubjectCreate,
-    session: AsyncSession = Depends(get_db),
-    user_id: str = Depends(get_current_user_id)
-):
-    """Create a new subject for the user"""
-
-    subject = Subject(
-        user_id=UUID(user_id),
-        name=request.name,
-        exam_target=request.exam_target
-    )
-    session.add(subject)
-    await session.commit()
-    await session.refresh(subject)
-
-    return SubjectResponse(
-        id=str(subject.id),
-        name=subject.name,
-        exam_target=subject.exam_target
-    )
-
-
-@router.get("/subjects", response_model=list[SubjectResponse])
-async def list_subjects(
-    session: AsyncSession = Depends(get_db),
-    user_id: str = Depends(get_current_user_id)
-):
-    """List all subjects for the user"""
-
-    query = select(Subject).where(Subject.user_id == UUID(user_id))
-    result = await session.execute(query)
-    subjects = result.scalars().all()
-
-    return [
-        SubjectResponse(
-            id=str(s.id),
-            name=s.name,
-            exam_target=s.exam_target
-        )
-        for s in subjects
-    ]
-
-
-def extract_text_from_pdf(file_content: bytes) -> str:
-    """Extract text from PDF using PyMuPDF"""
-    try:
-        doc = fitz.open(stream=file_content, filetype="pdf")
-        text = ""
-        for page_num in range(len(doc)):
-            page = doc[page_num]
-            text += page.get_text()
-        return text
-    except Exception as e:
-        raise ValueError(f"Failed to extract PDF text: {str(e)}")
-
-
-def chunk_text(text: str, chunk_size: int = 1000, overlap: int = 100) -> list[str]:
-    """Split text into overlapping chunks"""
-    chunks = []
-    for i in range(0, len(text), chunk_size - overlap):
-        chunks.append(text[i : i + chunk_size])
-    return chunks
-
-
-@router.post("/upload")
+@router.post("/upload", summary="Upload a PDF and extract text")
 async def upload_notes(
     subject_id: str,
     file: UploadFile = File(...),
-    session: AsyncSession = Depends(get_db),
-    user_id: str = Depends(get_current_user_id)
+    current_user: dict = Depends(get_current_user),
 ):
-    """Upload PDF notes for a subject"""
+    subject_res = supabase.table("subjects").select("id").eq("id", subject_id).eq("user_id", current_user["user_id"]).execute()
+    if not subject_res.data:
+        raise HTTPException(status_code=404, detail="Subject not found.")
 
-    # Verify subject belongs to user
-    query = select(Subject).where(
-        Subject.id == UUID(subject_id),
-        Subject.user_id == UUID(user_id)
-    )
-    result = await session.execute(query)
-    subject = result.scalar_one_or_none()
+    if not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="Only PDF files are allowed.")
 
-    if not subject:
-        raise HTTPException(status_code=404, detail="Subject not found")
-
-    if not file.filename.endswith('.pdf'):
-        raise HTTPException(status_code=400, detail="Only PDF files are allowed")
-
-    # Read file
     content = await file.read()
 
-    # Extract text
-    text = extract_text_from_pdf(content)
+    try:
+        doc = fitz.open(stream=content, filetype="pdf")
+        text = "".join(page.get_text() for page in doc)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to read PDF: {e}")
 
     if not text.strip():
-        raise HTTPException(status_code=400, detail="PDF appears to be empty or unreadable")
+        raise HTTPException(status_code=400, detail="PDF appears to be empty or unreadable.")
 
-    # Chunk text
-    chunks = chunk_text(text)
+    chunk_size = 3000
+    chunks = [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
 
-    # Save chunks to database
-    for chunk in chunks:
-        note = Notes(
-            subject_id=UUID(subject_id),
-            filename=file.filename,
-            raw_text=chunk,
-            chunk_count=len(chunks)
-        )
-        session.add(note)
-
-    await session.commit()
-
-    return {
-        "status": "success",
-        "filename": file.filename,
-        "chunks_created": len(chunks),
-        "total_characters": len(text)
-    }
-
-
-@router.get("/subject/{subject_id}")
-async def get_subject_notes(
-    subject_id: str,
-    session: AsyncSession = Depends(get_db),
-    user_id: str = Depends(get_current_user_id)
-):
-    """Get all notes for a subject"""
-
-    # Verify subject belongs to user
-    query = select(Subject).where(
-        Subject.id == UUID(subject_id),
-        Subject.user_id == UUID(user_id)
-    )
-    result = await session.execute(query)
-    subject = result.scalar_one_or_none()
-
-    if not subject:
-        raise HTTPException(status_code=404, detail="Subject not found")
-
-    # Get notes
-    query = select(Notes).where(Notes.subject_id == UUID(subject_id))
-    result = await session.execute(query)
-    notes = result.scalars().all()
-
-    return [
-        NotesResponse(
-            id=str(n.id),
-            filename=n.filename,
-            chunk_count=n.chunk_count,
-            created_at=n.created_at.isoformat()
-        )
-        for n in notes
+    rows = [
+        {
+            "subject_id": subject_id,
+            "filename": file.filename,
+            "raw_text": chunk,
+            "chunk_count": len(chunks),
+            "storage_path": f"uploads/{subject_id}/{file.filename}",
+        }
+        for chunk in chunks
     ]
+    supabase.table("notes").insert(rows).execute()
+
+    return {"status": "success", "filename": file.filename, "chunks_created": len(chunks), "total_characters": len(text)}
+
+
+@router.get("/subject/{subject_id}", summary="Get all notes for a subject")
+def get_subject_notes(subject_id: str, current_user: dict = Depends(get_current_user)):
+    subject_res = supabase.table("subjects").select("id").eq("id", subject_id).eq("user_id", current_user["user_id"]).execute()
+    if not subject_res.data:
+        raise HTTPException(status_code=404, detail="Subject not found.")
+
+    res = supabase.table("notes").select("id, filename, chunk_count, created_at").eq("subject_id", subject_id).execute()
+    return res.data or []

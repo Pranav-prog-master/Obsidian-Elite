@@ -4,7 +4,6 @@ import traceback
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from database import init_db, close_db
 from routes import auth, notes, quiz, doubt, explain, studyplan, performance
 from utils.model_switcher import router as admin_router
 
@@ -13,7 +12,7 @@ app = FastAPI(
     description=(
         "AI-powered personalized study companion for Indian students. "
         "Upload your notes, generate quizzes, solve doubts, and get concept explanations "
-        "powered by Claude AI."
+        "powered by OpenRouter AI."
     ),
     version="1.0.0",
     docs_url="/docs",
@@ -71,22 +70,6 @@ app.include_router(explain.router, prefix="/explain", tags=["Explain"])
 app.include_router(studyplan.router)
 app.include_router(performance.router)
 app.include_router(admin_router)
-
-
-# ---------------------------------------------------------------------------
-# Lifecycle events
-# ---------------------------------------------------------------------------
-
-@app.on_event("startup")
-async def startup_event():
-    await init_db()
-    print("✅ Database initialized")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    await close_db()
-    print("✅ Database connection closed")
 
 
 # ---------------------------------------------------------------------------
