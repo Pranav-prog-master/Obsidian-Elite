@@ -1,5 +1,5 @@
 """
-EduMentor AI — Setup & Connection Checker
+EduMentor AI - Setup & Connection Checker
 Run this first before anything else:  python setup_and_test.py
 """
 
@@ -8,16 +8,16 @@ import sys
 
 # ── helpers ────────────────────────────────────────────────────────────────
 
-def ok(msg):   print(f"  ✅  {msg}")
-def err(msg):  print(f"  ❌  {msg}")
-def info(msg): print(f"  ℹ️   {msg}")
-def warn(msg): print(f"  ⚠️   {msg}")
+def ok(msg):   print(f"  [OK]   {msg}")
+def err(msg):  print(f"  [ERR]  {msg}")
+def info(msg): print(f"  [INFO] {msg}")
+def warn(msg): print(f"  [WARN] {msg}")
 def sep():     print("-" * 60)
 
-# ── Step 1 — Environment variables ─────────────────────────────────────────
+# ── Step 1 - Environment variables ─────────────────────────────────────────
 
 sep()
-print("STEP 1 — Checking environment variables")
+print("STEP 1 - Checking environment variables")
 sep()
 
 from dotenv import load_dotenv
@@ -41,10 +41,10 @@ if not all_env_ok:
 
 ok("All environment variables found.")
 
-# ── Step 2 — OpenRouter API key format ─────────────────────────────────────
+# ── Step 2 - OpenRouter API key format ─────────────────────────────────────
 
 sep()
-print("STEP 2 — Checking OpenRouter API key format")
+print("STEP 2 - Checking OpenRouter API key format")
 sep()
 
 openrouter_key = os.getenv("OPENROUTER_API_KEY", "").strip()
@@ -60,10 +60,10 @@ elif not openrouter_key.startswith("sk-or-"):
 else:
     ok("OpenRouter API key format looks correct.")
 
-# ── Step 3 — Supabase connection ────────────────────────────────────────────
+# ── Step 3 - Supabase connection ────────────────────────────────────────────
 
 sep()
-print("STEP 3 — Checking Supabase connection")
+print("STEP 3 - Checking Supabase connection")
 sep()
 
 try:
@@ -75,14 +75,14 @@ except Exception as e:
     info("Check that SUPABASE_URL and SUPABASE_SERVICE_KEY are correct in your .env file.")
     sys.exit(1)
 
-# ── Step 4 — OpenRouter API live test ──────────────────────────────────────
+# ── Step 4 - OpenRouter API live test ──────────────────────────────────────
 
 sep()
-print("STEP 4 — Checking OpenRouter API connection")
+print("STEP 4 - Checking OpenRouter API connection")
 sep()
 
-PRIMARY_MODEL = os.getenv("AI_MODEL_PRIMARY", "google/gemma-2-9b-it:free")
-BACKUP_MODEL  = os.getenv("AI_MODEL_BACKUP",  "mistralai/mistral-7b-instruct:free")
+PRIMARY_MODEL = os.getenv("AI_MODEL_PRIMARY", "google/gemma-3-12b-it:free")
+BACKUP_MODEL  = os.getenv("AI_MODEL_BACKUP",  "google/gemma-3n-e4b-it:free")
 SITE_URL      = os.getenv("APP_SITE_URL",     "http://localhost:5173")
 APP_TITLE     = os.getenv("APP_TITLE",        "EduMentor AI")
 
@@ -103,15 +103,12 @@ try:
             "X-Title": APP_TITLE,
         },
     )
-    reply = response.choices[0].message.content or ""
+    reply = (response.choices[0].message.content or "").encode("ascii", "ignore").decode()
 
     if "OK" in reply.upper():
         ok(f"OpenRouter API connection successful. Primary model: {PRIMARY_MODEL}")
     else:
-        warn(
-            f"OpenRouter responded but with unexpected content. "
-            f"This may still work. Response was: {reply[:100]}"
-        )
+        warn(f"OpenRouter responded but unexpectedly. Response: {reply[:80]}")
 
 except Exception as primary_exc:
     warn(f"Primary model failed: {primary_exc}")
@@ -126,26 +123,23 @@ except Exception as primary_exc:
                 "X-Title": APP_TITLE,
             },
         )
-        reply = response.choices[0].message.content or ""
+        reply = (response.choices[0].message.content or "").encode("ascii", "ignore").decode()
         if reply.strip():
-            ok(f"Backup model works. Consider setting AI_MODEL_PRIMARY={BACKUP_MODEL} in your .env")
+            ok(f"Backup model works: {BACKUP_MODEL}")
         else:
             warn("Backup model returned empty response.")
     except Exception as backup_exc:
-        err(
-            f"OpenRouter API connection failed.\n"
-            f"  Please check:\n"
-            f"    1) Your OPENROUTER_API_KEY in .env is correct\n"
-            f"    2) You have credits at https://openrouter.ai/credits\n"
-            f"    3) Your internet connection is working\n"
-            f"  Backup error: {backup_exc}"
-        )
+        err("OpenRouter API connection failed.")
+        err(f"Backup error: {backup_exc}")
+        info("1) Check your OPENROUTER_API_KEY in .env is correct")
+        info("2) Check credits at https://openrouter.ai/credits")
+        info("3) Run python test_models.py to find working free models")
         sys.exit(1)
 
-# ── Step 5 — interactions table ────────────────────────────────────────────
+# ── Step 5 - interactions table ────────────────────────────────────────────
 
 sep()
-print("STEP 5 — Checking interactions table")
+print("STEP 5 - Checking interactions table")
 sep()
 
 INTERACTIONS_SQL = """\
@@ -165,16 +159,16 @@ try:
 except Exception as e:
     err(f"interactions table not found: {e}")
     print()
-    print("  ⚠️  Run the following SQL in your Supabase SQL editor, then re-run this script:")
+    print("  Run the following SQL in your Supabase SQL editor, then re-run this script:")
     print()
     print(INTERACTIONS_SQL)
     print()
     sys.exit(1)
 
-# ── Step 6 — difficulty column in quiz_sessions ────────────────────────────
+# ── Step 6 - difficulty column in quiz_sessions ────────────────────────────
 
 sep()
-print("STEP 6 — Checking difficulty column in quiz_sessions")
+print("STEP 6 - Checking difficulty column in quiz_sessions")
 sep()
 
 DIFFICULTY_SQL = "ALTER TABLE quiz_sessions ADD COLUMN IF NOT EXISTS difficulty text default 'medium';"
@@ -185,20 +179,20 @@ try:
 except Exception as e:
     err(f"difficulty column missing: {e}")
     print()
-    print("  ⚠️  Run the following SQL in your Supabase SQL editor, then re-run this script:")
+    print("  Run the following SQL in your Supabase SQL editor, then re-run this script:")
     print()
     print(f"  {DIFFICULTY_SQL}")
     print()
     sys.exit(1)
 
-# ── Step 7 — Final status ──────────────────────────────────────────────────
+# ── Step 7 - Final status ──────────────────────────────────────────────────
 
 sep()
-print("STEP 7 — Final status")
+print("STEP 7 - Final status")
 sep()
 ok("All checks passed!")
 print()
-print("  🚀  Setup complete. You are ready to run the server and test all flows.")
+print("  Setup complete. You are ready to run the server and test all flows.")
 print()
 print("  Next steps:")
 print("    1.  python get_token.py student@test.com test123")
@@ -206,8 +200,8 @@ print("    2.  python create_test_data.py YOUR_TOKEN \"Physics Class 12\"")
 print("    3.  uvicorn main:app --reload --port 8000")
 print("    4.  python test_flows.py YOUR_TOKEN YOUR_SUBJECT_ID")
 print()
-print("  Bonus — switch AI model live during demo:")
-print("    curl -X POST http://localhost:8000/admin/switch-model \\")
-print("         -H 'Content-Type: application/json' \\")
-print("         -d '{\"model_name\": \"mistral\"}'")
+print("  Bonus - switch AI model live during demo:")
+print("    curl -X POST http://localhost:8000/admin/switch-model")
+print("         -H \"Content-Type: application/json\"")
+print("         -d \"{\"model_name\": \"mistral\"}\"")
 print()
