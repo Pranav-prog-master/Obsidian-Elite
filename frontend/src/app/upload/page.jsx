@@ -56,7 +56,7 @@ export default function UploadPage() {
           <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 15, marginTop: 4 }}>Upload your PDF notes — AI will extract content and generate quizzes from them</p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
           {/* Upload panel */}
           <div className="card anim-2" style={{ padding: 28 }}>
             <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, fontWeight: 600, color: 'var(--dark)', marginBottom: 18 }}>Select Subject</h3>
