@@ -1,5 +1,5 @@
 """
-EduMentor AI — Token Generator (Register + Login in one command)
+EduMentor AI - Token Generator (Register + Login in one command)
 Usage:  python get_token.py <email> <password>
 Example: python get_token.py student@test.com test123
 """
@@ -7,8 +7,6 @@ Example: python get_token.py student@test.com test123
 import os
 import sys
 from datetime import datetime, timedelta, timezone
-
-# ── arg check ──────────────────────────────────────────────────────────────
 
 if len(sys.argv) != 3:
     print()
@@ -19,8 +17,6 @@ if len(sys.argv) != 3:
 
 EMAIL    = sys.argv[1].strip().lower()
 PASSWORD = sys.argv[2].strip()
-
-# ── imports ────────────────────────────────────────────────────────────────
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -34,10 +30,8 @@ ALGORITHM  = os.getenv("ALGORITHM", "HS256")
 EXPIRE_MIN = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
 
 if not SECRET_KEY:
-    print("  ❌  SECRET_KEY is not set in your .env file. Cannot generate token.")
+    print("  [ERR]  SECRET_KEY is not set in your .env file. Cannot generate token.")
     sys.exit(1)
-
-# ── helpers ────────────────────────────────────────────────────────────────
 
 def hash_password(plain: str) -> str:
     return bcrypt.hashpw(plain.encode(), bcrypt.gensalt()).decode()
@@ -50,46 +44,33 @@ def create_token(user_id: str, email: str) -> str:
     payload = {"sub": user_id, "email": email, "exp": expire}
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
-# ── main logic ─────────────────────────────────────────────────────────────
-
 print()
 print("=" * 60)
-print("  EduMentor AI — Token Generator")
+print("  EduMentor AI - Token Generator")
 print("=" * 60)
 
-# Check if user already exists
 res = supabase.table("profiles").select("id, email, hashed_password").eq("email", EMAIL).execute()
 
 if res.data:
-    # ── Existing user — verify password ───────────────────────────────────
     user = res.data[0]
     print(f"\n  Found existing account for {EMAIL}")
-
     if not verify_password(PASSWORD, user["hashed_password"]):
-        print("  ❌  Incorrect password. Please try again.")
+        print("  [ERR]  Incorrect password. Please try again.")
         sys.exit(1)
-
     user_id = user["id"]
-    print("  ✅  Password verified.")
-
+    print("  [OK]   Password verified.")
 else:
-    # ── New user — register ────────────────────────────────────────────────
     print(f"\n  No account found for {EMAIL}. Creating new account...")
-
     hashed = hash_password(PASSWORD)
     insert_res = supabase.table("profiles").insert({
         "email": EMAIL,
         "hashed_password": hashed,
     }).execute()
-
     if not insert_res.data:
-        print("  ❌  Failed to create account. Check your Supabase connection.")
+        print("  [ERR]  Failed to create account. Check your Supabase connection.")
         sys.exit(1)
-
     user_id = insert_res.data[0]["id"]
-    print(f"  ✅  Account created successfully.")
-
-# ── Generate token ─────────────────────────────────────────────────────────
+    print("  [OK]   Account created successfully.")
 
 token = create_token(user_id, EMAIL)
 

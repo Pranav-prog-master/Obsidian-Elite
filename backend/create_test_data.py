@@ -1,13 +1,11 @@
 """
-EduMentor AI — Test Data Creator
+EduMentor AI - Test Data Creator
 Usage:  python create_test_data.py <token> <subject_name>
 Example: python create_test_data.py eyJhbGci... "Physics Class 12"
 """
 
 import os
 import sys
-
-# ── arg check ──────────────────────────────────────────────────────────────
 
 if len(sys.argv) < 3:
     print()
@@ -19,8 +17,6 @@ if len(sys.argv) < 3:
 TOKEN        = sys.argv[1].strip()
 SUBJECT_NAME = " ".join(sys.argv[2:]).strip()
 
-# ── imports ────────────────────────────────────────────────────────────────
-
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -30,11 +26,9 @@ from supabase_client import supabase
 SECRET_KEY = os.getenv("SECRET_KEY", "")
 ALGORITHM  = os.getenv("ALGORITHM", "HS256")
 
-# ── helpers ────────────────────────────────────────────────────────────────
-
-def ok(msg):  print(f"  ✅  {msg}")
-def err(msg): print(f"  ❌  {msg}")
-def info(msg):print(f"  ℹ️   {msg}")
+def ok(msg):  print(f"  [OK]   {msg}")
+def err(msg): print(f"  [ERR]  {msg}")
+def info(msg):print(f"  [INFO] {msg}")
 def sep():    print("-" * 60)
 
 SAMPLE_NOTES = (
@@ -57,25 +51,17 @@ SAMPLE_NOTES = (
     "Orbital velocity depends on the radius of the orbit."
 )
 
-# ── main ───────────────────────────────────────────────────────────────────
-
 print()
 print("=" * 60)
-print("  EduMentor AI — Test Data Creator")
+print("  EduMentor AI - Test Data Creator")
 print("=" * 60)
 
-# Step 1: Decode token to get user_id
 sep()
-print("STEP 1 — Decoding token")
+print("STEP 1 - Decoding token")
 sep()
 
 try:
-    payload = jwt.decode(
-        TOKEN,
-        SECRET_KEY,
-        algorithms=[ALGORITHM],
-        options={"verify_aud": False},
-    )
+    payload = jwt.decode(TOKEN, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_aud": False})
     user_id = payload.get("sub")
     email   = payload.get("email", "unknown")
     if not user_id:
@@ -89,9 +75,8 @@ except ValueError as e:
     err(str(e))
     sys.exit(1)
 
-# Step 2 & 3: Check or create subject
 sep()
-print("STEP 2 — Checking / creating subject")
+print("STEP 2 - Checking / creating subject")
 sep()
 
 existing = (
@@ -111,17 +96,14 @@ else:
         "name": SUBJECT_NAME,
         "exam_target": "JEE",
     }).execute()
-
     if not insert_res.data:
         err("Failed to create subject. Check your Supabase connection.")
         sys.exit(1)
-
     subject_id = insert_res.data[0]["id"]
     ok(f"Subject created with id: {subject_id}")
 
-# Step 4: Check if notes already exist
 sep()
-print("STEP 3 — Checking / creating sample notes")
+print("STEP 3 - Checking / creating sample notes")
 sep()
 
 notes_res = supabase.table("notes").select("id").eq("subject_id", subject_id).execute()
@@ -129,7 +111,6 @@ notes_res = supabase.table("notes").select("id").eq("subject_id", subject_id).ex
 if notes_res.data:
     ok("Notes already exist for this subject. Skipping notes creation.")
 else:
-    # Step 5 & 6: Insert sample notes
     notes_insert = supabase.table("notes").insert({
         "subject_id": subject_id,
         "filename": "sample_physics_notes.txt",
@@ -137,14 +118,11 @@ else:
         "chunk_count": 1,
         "storage_path": "sample",
     }).execute()
-
     if not notes_insert.data:
         err("Failed to insert sample notes. Check your Supabase connection.")
         sys.exit(1)
-
     ok("Sample notes created successfully.")
 
-# Step 7 & 8: Final output
 sep()
 print()
 ok("You are now ready to test all quiz and explanation flows.")
